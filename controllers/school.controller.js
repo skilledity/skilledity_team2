@@ -273,78 +273,78 @@ export const changePassword = async (req, res) => {
 }
 
 //anubhaw
-export const csvToJSON = async (csvfilepath) => {
-    try {
-        const csvContent = await fs.promises.readFile(csvfilepath, 'utf-8');
-        let jsonData;
-        Papa.parse(csvContent, {
-            header: true,
-            dynamicTyping: true,
-            complete: (results) => {
-                jsonData = results.data;
-            }
-        });
+// export const csvToJSON = async (csvfilepath) => {
+//     try {
+//         const csvContent = await fs.promises.readFile(csvfilepath, 'utf-8');
+//         let jsonData;
+//         Papa.parse(csvContent, {
+//             header: true,
+//             dynamicTyping: true,
+//             complete: (results) => {
+//                 jsonData = results.data;
+//             }
+//         });
 
-        return jsonData;
-    }
-    catch (error) {
-        console.log(error);
-    }
-};
+//         return jsonData;
+//     }
+//     catch (error) {
+//         console.log(error);
+//     }
+// };
 
 // Helper function to remove duplicates based on email field
-const removeDuplicatesByEmail = (data) => {
-    const seen = new Set();
-    return data.filter(item => {
-        if (seen.has(item.email)) {
-            return false;
-        } else {
-            seen.add(item.email);
-            return true;
-        }
-    });
-};
+// const removeDuplicatesByEmail = (data) => {
+//     const seen = new Set();
+//     return data.filter(item => {
+//         if (seen.has(item.email)) {
+//             return false;
+//         } else {
+//             seen.add(item.email);
+//             return true;
+//         }
+//     });
+// };
 
-export const fileUpload = async (req, res) => {
-    try {
-        const jsonfile = await csvToJSON(req.file.path);
-        console.log(jsonfile);
-        await fs.promises.unlink(req.file.path);
-        console.log("file deleted successfully.");
-        const jsonData = removeDuplicatesByEmail(jsonfile);
-        console.log(jsonData);
-        res.status(200).json({ message: "CSV file parsed successfully.", data: jsonData });
-    }
-    catch (error) {
-        console.log(error);
-        await fs.promises.unlink(req.file.path);
-        console.log("file deleted successfully.");
-        res.status(500).json({ message: "Internal server error." });
-    }
-};
+// export const fileUpload = async (req, res) => {
+//     try {
+//         const jsonfile = await csvToJSON(req.file.path);
+//         console.log(jsonfile);
+//         await fs.promises.unlink(req.file.path);
+//         console.log("file deleted successfully.");
+//         const jsonData = removeDuplicatesByEmail(jsonfile);
+//         console.log(jsonData);
+//         res.status(200).json({ message: "CSV file parsed successfully.", data: jsonData });
+//     }
+//     catch (error) {
+//         console.log(error);
+//         await fs.promises.unlink(req.file.path);
+//         console.log("file deleted successfully.");
+//         res.status(500).json({ message: "Internal server error." });
+//     }
+// };
 
 //amey
-export const csvJson = async (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded' });
-    }
+// export const csvJson = async (req, res) => {
+//     if (!req.file) {
+//         return res.status(400).json({ error: 'No file uploaded' });
+//     }
 
-    const results = [];
-    const filePath = path.join(__dirname, 'uploads', req.file.filename);
+//     const results = [];
+//     const filePath = path.join(__dirname, 'uploads', req.file.filename);
 
-    // Read and parse CSV file
-    fs.createReadStream(filePath)
-        .pipe(csv())
-        .on('data', (data) => results.push(data))
-        .on('end', () => {
-            // Return the parsed CSV as JSON
-            res.json(results);
-        })
-        .on('error', (err) => {
-            console.error('Error reading CSV file:', err);
-            res.status(500).json({ error: 'Failed to process CSV file' });
-        });
-};
+//     // Read and parse CSV file
+//     fs.createReadStream(filePath)
+//         .pipe(csv())
+//         .on('data', (data) => results.push(data))
+//         .on('end', () => {
+//             // Return the parsed CSV as JSON
+//             res.json(results);
+//         })
+//         .on('error', (err) => {
+//             console.error('Error reading CSV file:', err);
+//             res.status(500).json({ error: 'Failed to process CSV file' });
+//         });
+// };
 
 
 
