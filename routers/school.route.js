@@ -1,6 +1,7 @@
 import express from "express";
 import multer from "multer";
 import path from 'path';
+import os from 'os';
 import fs from 'fs';
 // import fileUpload from '../controllers/school.controller.js';
 import csv from 'csv-parser';
@@ -11,10 +12,11 @@ const router = express.Router();
 // Configure Multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+        const uploadDir = path.join(os.tmpdir()); // Use the system's temporary directory
+        cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-        cb(null, file.originalname); // Keep the original file name
+        cb(null, `${Date.now()}-${file.originalname}`);  // Save with timestamp
     }
 });
 
