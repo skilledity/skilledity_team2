@@ -35,5 +35,5 @@ app.use('/student', student_router);
 
 
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+    console.log(`Server is running on port https://skilledilty-test.vercel.app/`);
 });

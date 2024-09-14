@@ -191,8 +191,8 @@ const sendEmailIfNotLoggedInForFirstTime = async () => {
         console.error('Error querying students or schools:', error);
     }
 }
-sendEmailIfNotLoggedInForFirstTime();
-resendEmailIfNotLoggedInForLongTime();
+// sendEmailIfNotLoggedInForFirstTime();
+// resendEmailIfNotLoggedInForLongTime();
 
 export const forgotPassword = async (req, res) => {
     const { email } = req.body;
@@ -292,24 +292,6 @@ export const csvToJSON = async (csvfilepath) => {
     }
 };
 
-export const fileUpload = async (req, res) => {
-    try {
-        const jsonfile = await csvToJSON(req.file.path);
-        console.log(jsonfile);
-        await fs.promises.unlink(req.file.path);
-        console.log("file deleted successfully.");
-        const jsonData = removeDuplicatesByEmail(jsonfile);
-        console.log(jsonData);
-        res.status(200).json({message: "CSV file parsed successfully.", data: jsonData});
-    }
-    catch (error) {
-        console.log(error);
-        await fs.promises.unlink(req.file.path);
-        console.log("file deleted successfully.");
-        res.status(500).json({message: "Internal server error."});
-    }
-};
-
 // Helper function to remove duplicates based on email field
 const removeDuplicatesByEmail = (data) => {
     const seen = new Set();
@@ -323,8 +305,23 @@ const removeDuplicatesByEmail = (data) => {
     });
 };
 
-
-
+export const fileUpload = async (req, res) => {
+    try {
+        const jsonfile = await csvToJSON(req.file.path);
+        console.log(jsonfile);
+        await fs.promises.unlink(req.file.path);
+        console.log("file deleted successfully.");
+        const jsonData = removeDuplicatesByEmail(jsonfile);
+        console.log(jsonData);
+        res.status(200).json({ message: "CSV file parsed successfully.", data: jsonData });
+    }
+    catch (error) {
+        console.log(error);
+        await fs.promises.unlink(req.file.path);
+        console.log("file deleted successfully.");
+        res.status(500).json({ message: "Internal server error." });
+    }
+};
 
 //amey
 export const csvJson = async (req, res) => {
