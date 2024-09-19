@@ -1,7 +1,7 @@
 import express from "express";
 import school_router from "./routers/school.route.js";
 import student_router from './routers/student.route.js';
-import pool from "./model/school.model.js";
+import admin_router from './routers/admin.route.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -17,9 +17,10 @@ app.get('/', (req, res) => {
 
 app.use('/school', school_router);
 app.use('/student', student_router);
+app.use('/admin', admin_router);
 
 
 
 app.listen(port, () => {
-    console.log(`Server is running on port https://skilledilty-test.vercel.app/`);
+    console.log(`Server is running on port ${port}`);
 });

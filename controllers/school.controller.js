@@ -51,11 +51,11 @@ export const getSchool = async (req, res) => {
 }
 
 export const registerStudent = async (req, res) => {
-    const { email, regno, name, age, course, school_id, address } = req.body;
+    const { student_id, student_school_fk, name, email, std_class, section, gender, father_name, dob, contact_no } = req.body;
 
     try {
         // Validate input
-        if (!email || !regno || !name || !age || !course || !school_id || !address) {
+        if (!email || !std_class || !name || !dob || !section || !student_school_fk || !student_id || !gender || !father_name || !contact_no) {
             return res.status(400).json({ error: 'All fields are required' });
         }
 
@@ -76,8 +76,8 @@ export const registerStudent = async (req, res) => {
 
         // Insert student data into the student table
         await pool.query(
-            'INSERT INTO student (email, register_no, name, password, course, school_id, address, no_of_logins, lastlogin, age) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
-            [email, regno, name, hashedPassword, course, school_id, address, 0, today, age]
+            'INSERT INTO student (student_id, student_school_fk, name, email, lastlogin, no_of_logins, password, class, section, gender, fathers_name, dob, contact_no) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)',
+            [student_id, student_school_fk, name, email, today, 0, hashedPassword, std_class, section, gender, father_name, dob, contact_no]
         );
 
         // Send the random password to the student via email
@@ -85,7 +85,7 @@ export const registerStudent = async (req, res) => {
             from: 'your-email@gmail.com',
             to: email,
             subject: 'Your Account Registration and Password',
-            text: `Hi ${name},\n\nYou have been successfully registered for the course: ${course}.\nYour login details are as follows:\nEmail: ${email}\nPassword: ${randomPassword}\n\nPlease change your password upon first login.\n\nThanks!`
+            text: `Hi ${name},\n\nYou have been successfully registered\nYour login details are as follows:\nEmail: ${email}\nPassword: ${randomPassword}\n\nPlease change your password upon first login.\n\nThanks!`
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
@@ -133,8 +133,8 @@ const resendEmailIfNotLoggedInForLongTime = async () => {
 
                 // Update the database to indicate that an email has been sent
                 await pool.query(
-                    'UPDATE student SET email_sent = TRUE, email_sent_date = $1 WHERE email = $2',
-                    [today, student.email]
+                    'UPDATE student SET email_sent = TRUE WHERE email = $1',
+                    [student.email]
                 );
             } catch (error) {
                 console.error(`Error sending email to ${student.email}:`, error);
@@ -145,7 +145,6 @@ const resendEmailIfNotLoggedInForLongTime = async () => {
         console.error('Error querying students or schools:', error);
     }
 };
-
 
 //send mail if not loggedin for first time for 2 days
 const sendEmailIfNotLoggedInForFirstTime = async () => {
@@ -161,7 +160,7 @@ const sendEmailIfNotLoggedInForFirstTime = async () => {
             [thresholdDate]
         );
 
-        console.log(studentsResult.rows);
+        // console.log(studentsResult.rows);
 
         const students = studentsResult.rows;
 
@@ -179,8 +178,8 @@ const sendEmailIfNotLoggedInForFirstTime = async () => {
 
                 // Update the database to indicate that an email has been sent
                 await pool.query(
-                    'UPDATE student SET email_sent = TRUE, email_sent_date = $1 WHERE email = $2',
-                    [today, student.email]
+                    'UPDATE student SET email_sent = TRUE WHERE email = $1',
+                    [student.email]
                 );
             }
             catch (error) {
@@ -191,6 +190,7 @@ const sendEmailIfNotLoggedInForFirstTime = async () => {
         console.error('Error querying students or schools:', error);
     }
 }
+
 sendEmailIfNotLoggedInForFirstTime();
 resendEmailIfNotLoggedInForLongTime();
 
@@ -322,6 +322,28 @@ export const fileUpload = async (req, res) => {
         res.status(500).json({ message: "Internal server error." });
     }
 };
+
+//delete student from database
+export const deleteStudent = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        // Check if the student exists
+        const result = await pool.query('SELECT * FROM student WHERE email = $1', [email]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Student not found' });
+        }
+
+        // Delete the student from the database
+        await pool.query('DELETE FROM student WHERE email = $1', [email]);
+
+        return res.json({ message: 'Student deleted successfully' });
+
+    } catch (error) {
+        console.error('Error deleting student:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
 
 
 
