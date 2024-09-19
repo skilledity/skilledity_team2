@@ -119,7 +119,7 @@ export const registerStudent = async (req, res) => {
 
     } catch (error) {
         console.error('Error registering student:', error);
-        return res.status(500).json({ error: 'Internal Server Error' });
+        return res.status(500).json({ message: 'Internal Server Error' });
     }
 }
 
@@ -330,6 +330,8 @@ const csvToJSON = async (csvfilepath) => {
 };
 
 //upload csv file
+import axios from 'axios';
+
 export const fileUpload = async (req, res) => {
     try {
         const jsonfile = await csvToJSON(req.file.path);
@@ -338,7 +340,19 @@ export const fileUpload = async (req, res) => {
         console.log("file deleted successfully.");
         const jsonData = removeDuplicatesByEmail(jsonfile);
         console.log(jsonData);
-        res.status(200).json({ message: "CSV file parsed successfully.", data: jsonData });
+
+        // Sending each object in jsonData to a different route
+        for (const item of jsonData) {
+            try {
+                const response = await axios.post('/school/register-student', item);
+                console.log(`Successfully sent: ${JSON.stringify(item)}`);
+                console.log(response.message);
+            } catch (error) {
+                console.log(`Error sending item: ${JSON.stringify(item)}. Error: ${error.message}`);
+            }
+        }
+
+        res.status(200).json({ message: "CSV file parsed and data sent successfully.", data: jsonData });
     }
     catch (error) {
         console.log(error);
@@ -347,6 +361,7 @@ export const fileUpload = async (req, res) => {
         res.status(500).json({ message: "Internal server error." });
     }
 };
+
 
 //delete student from database
 export const deleteStudent = async (req, res) => {
