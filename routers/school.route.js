@@ -5,7 +5,7 @@ import os from 'os';
 import fs from 'fs';
 // import fileUpload from '../controllers/school.controller.js';
 import csv from 'csv-parser';
-import { changePassword, deleteStudent, fileUpload, forgotPassword, getSchool, registerStudent } from "../controllers/school.controller.js";
+import { changePassword, deleteStudent, fileUpload, forgotPassword, getSchool, getStudents, registerStudent } from "../controllers/school.controller.js";
 
 const router = express.Router();
 
@@ -28,6 +28,7 @@ if (!fs.existsSync('uploads')) {
 }
 
 router.get('/get-school', getSchool);
+router.get('/get-student/:id', getStudents);
 router.post('/register-student', registerStudent);
 router.put('/forget-password', forgotPassword);
 router.put('/change-password', changePassword);

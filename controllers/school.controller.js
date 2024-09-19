@@ -39,6 +39,7 @@ const generatePassword = () => {
     return crypto.randomBytes(8).toString('hex');  // Generates a 16-character random password
 };
 
+// Get all schools
 export const getSchool = async (req, res) => {
     try {
         // Query to get all schools from the "school" table
@@ -50,6 +51,24 @@ export const getSchool = async (req, res) => {
     }
 }
 
+//get all students
+export const getStudents = async (req, res) => {
+    try {
+        if (!req.params.id) {
+            return res.status(400).json({ error: 'School id is required' });
+        }
+
+        // Query to get all students from the "student" table from school id in params
+        const result = await pool.query('SELECT * FROM student WHERE student_school_fk = $1', [req.params.id]);
+        res.json(result.rows); // Send the students as JSON response
+
+    } catch (error) {
+        console.error('Error retrieving students:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+// Register a new student
 export const registerStudent = async (req, res) => {
     const { student_id, student_school_fk, name, email, std_class, section, gender, father_name, dob, contact_no } = req.body;
 
@@ -104,6 +123,7 @@ export const registerStudent = async (req, res) => {
     }
 }
 
+//send mail if not loggedin for long time
 const resendEmailIfNotLoggedInForLongTime = async () => {
     const daysThreshold = 30;  // Number of days to consider as "long time"
     const today = moment().format('YYYY-MM-DD');
@@ -191,9 +211,12 @@ const sendEmailIfNotLoggedInForFirstTime = async () => {
     }
 }
 
-sendEmailIfNotLoggedInForFirstTime();
-resendEmailIfNotLoggedInForLongTime();
+//Remove the comment in production
 
+// sendEmailIfNotLoggedInForFirstTime();
+// resendEmailIfNotLoggedInForLongTime();
+
+// Forgot password
 export const forgotPassword = async (req, res) => {
     const { email } = req.body;
 
@@ -241,6 +264,7 @@ export const forgotPassword = async (req, res) => {
     }
 }
 
+// Change password
 export const changePassword = async (req, res) => {
     const { email, newPassword } = req.body;
 
@@ -305,6 +329,7 @@ const csvToJSON = async (csvfilepath) => {
     }
 };
 
+//upload csv file
 export const fileUpload = async (req, res) => {
     try {
         const jsonfile = await csvToJSON(req.file.path);
