@@ -9,6 +9,7 @@ import fs from 'fs';
 import csv from 'csv-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import axios from 'axios';
 
 // Get directory name in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -330,7 +331,6 @@ const csvToJSON = async (csvfilepath) => {
 };
 
 //upload csv file
-import axios from 'axios';
 
 export const fileUpload = async (req, res) => {
     try {
@@ -341,16 +341,16 @@ export const fileUpload = async (req, res) => {
         const jsonData = removeDuplicatesByEmail(jsonfile);
         console.log(jsonData);
 
-        // Sending each object in jsonData to a different route
-        for (const item of jsonData) {
-            try {
-                const response = await axios.post('/school/register-student', item);
-                console.log(`Successfully sent: ${JSON.stringify(item)}`);
-                console.log(response.message);
-            } catch (error) {
-                console.log(`Error sending item: ${JSON.stringify(item)}. Error: ${error.message}`);
-            }
-        }
+        // Sending each object in jsonData to a different rouawait Promise.all(
+            jsonData.map(async (item) => {
+                try {
+                    const response = await axios.post('http://ec2-52-66-8-80.ap-south-1.compute.amazonaws.com:3000/school/register-student', item);
+                    console.log(`Successfully sent: ${JSON.stringify(item)}`);
+                    console.log(response.data.message);  // Assuming the response contains a "message" field
+                } catch (error) {
+                    console.log(`Error sending item: ${JSON.stringify(item)}. Error: ${error.message}`);
+                }
+            });
 
         res.status(200).json({ message: "CSV file parsed and data sent successfully.", data: jsonData });
     }

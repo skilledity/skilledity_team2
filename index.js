@@ -3,12 +3,16 @@ import school_router from "./routers/school.route.js";
 import student_router from './routers/student.route.js';
 import admin_router from './routers/admin.route.js';
 import dotenv from 'dotenv';
+import cors from 'cors';
 
 dotenv.config();
 
 const app = express();
 const port = 3000;
 app.use(express.json());
+app.use(cors({
+    origin: 'http://localhost:3001',  // Only allow requests from this origin
+}));
 
 //TESTING API
 app.get('/', (req, res) => {
