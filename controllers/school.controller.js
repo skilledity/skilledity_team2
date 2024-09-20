@@ -76,13 +76,13 @@ export const registerStudent = async (req, res) => {
     try {
         // Validate input
         if (!email || !std_class || !name || !dob || !section || !student_school_fk || !student_id || !gender || !father_name || !contact_no) {
-            return res.status(400).json({ error: 'All fields are required' });
+            return res.status(400).json({ message: 'All fields are required' });
         }
 
         // Check if the student already exists
         const checkStudent = await pool.query('SELECT * FROM student WHERE email = $1', [email]);
         if (checkStudent.rows.length > 0) {
-            return res.status(400).json({ error: 'Student already registered with this email' });
+            return res.status(400).json({ message: 'Student already registered with this email' });
         }
 
         // Generate a random password
@@ -111,7 +111,7 @@ export const registerStudent = async (req, res) => {
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
                 console.error('Error sending email:', error);
-                return res.status(500).json({ error: 'Failed to send registration email' });
+                return res.status(500).json({ message: 'Failed to send registration email' });
             }
             console.log('Registration email sent:', info.response);
         });
@@ -335,22 +335,23 @@ const csvToJSON = async (csvfilepath) => {
 export const fileUpload = async (req, res) => {
     try {
         const jsonfile = await csvToJSON(req.file.path);
-        console.log(jsonfile);
         await fs.promises.unlink(req.file.path);
         console.log("file deleted successfully.");
         const jsonData = removeDuplicatesByEmail(jsonfile);
-        console.log(jsonData);
+        // console.log(jsonData);
 
         // Sending each object in jsonData to a different rouawait Promise.all(
-            jsonData.map(async (item) => {
-                try {
-                    const response = await axios.post('http://ec2-52-66-8-80.ap-south-1.compute.amazonaws.com:3000/school/register-student', item);
-                    console.log(`Successfully sent: ${JSON.stringify(item)}`);
-                    console.log(response.data.message);  // Assuming the response contains a "message" field
-                } catch (error) {
-                    console.log(`Error sending item: ${JSON.stringify(item)}. Error: ${error.message}`);
-                }
-            });
+        for (const item of jsonData) {
+            try {
+		console.log('\nNew Item');
+		console.log(item);
+                const response = await axios.post('http://ec2-52-66-8-80.ap-south-1.compute.amazonaws.com:3000/school/register-student', item);
+		console.log(response.data.message + ` - ${item.email}`);
+            }
+	    catch (error) {
+                console.log(`Error registering student: ${item.email}. Error: ${error}`);
+            }
+        }
 
         res.status(200).json({ message: "CSV file parsed and data sent successfully.", data: jsonData });
     }
