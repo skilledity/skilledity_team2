@@ -124,6 +124,42 @@ export const registerStudent = async (req, res) => {
     }
 }
 
+//login school
+export const loginSchool = async (req, res) => {
+    console.log(req.body);
+    const { email, password } = req.body;
+    const today = moment().format('YYYY-MM-DD');
+
+    try {
+        // Check if the school exists
+        const result = await pool.query('SELECT * FROM school WHERE email = $1', [email]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'School not found' });
+        }
+
+        const school = result.rows[0];
+
+        // Check if the password matches
+        const passwordMatch = await bcryptjs.compare(password, school.password);
+        if (!passwordMatch) {
+            return res.status(401).json({ error: 'Invalid password' });
+        }
+
+        // Update login information
+        await pool.query(
+            'UPDATE school SET last_login = $1 WHERE email = $2',
+            [today, email]
+        );
+
+        // Login successful
+        return res.json({ message: 'Login successful!' });
+
+    } catch (error) {
+        console.error('Error during school login:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
 //send mail if not loggedin for long time
 const resendEmailIfNotLoggedInForLongTime = async () => {
     const daysThreshold = 30;  // Number of days to consider as "long time"
