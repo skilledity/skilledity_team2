@@ -33,6 +33,7 @@ router.post('/register-student', registerStudent);
 router.put('/forget-password', forgotPassword);
 router.put('/change-password', changePassword);
 router.post('/upload-csv', upload.single('file'), fileUpload);
+// router.post('/register-student-through-csv', registerStudentThroughCSV);
 router.delete('/delete-student', deleteStudent);
 
 export default router;

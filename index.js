@@ -9,22 +9,22 @@ dotenv.config();
 
 const app = express();
 const port = 3000;
+
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:3001',  // Only allow requests from this origin
+    origin: 'https://www.skilledity.in/',  // Only allow requests from this origin
 }));
 
-//TESTING API
+// TESTING API
 app.get('/', (req, res) => {
     res.json("API is Working");
-})
+});
 
 app.use('/school', school_router);
 app.use('/student', student_router);
 app.use('/admin', admin_router);
 
-
-
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
+
