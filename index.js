@@ -2,6 +2,9 @@ import express from "express";
 import school_router from "./routers/school.route.js";
 import student_router from './routers/student.route.js';
 import admin_router from './routers/admin.route.js';
+import { authenticateToken } from "./middleware/auth.middleware.js";
+import { loginSchool } from "./controllers/school.controller.js"; // Import the school-login controller
+import { studentLogin } from "./controllers/student.controller.js"; // Import student-login controller
 import dotenv from 'dotenv';
 import cors from 'cors';
 
@@ -20,9 +23,12 @@ app.get('/', (req, res) => {
     res.json("API is Working");
 });
 
-app.use('/school', school_router);
-app.use('/student', student_router);
-app.use('/admin', admin_router);
+app.post('/school-login', loginSchool);  // School login
+app.post('/student-login', studentLogin); // Student login
+
+app.use('/school', authenticateToken, school_router);
+app.use('/student', authenticateToken, student_router);
+app.use('/admin', authenticateToken, admin_router);
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
