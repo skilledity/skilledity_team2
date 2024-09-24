@@ -1,6 +1,5 @@
 import pkg from "pg";
 import dotenv from "dotenv";
-import { sql } from "@vercel/postgres";
 
 dotenv.config();
 
