@@ -12,7 +12,7 @@ const port = 3000;
 
 app.use(express.json());
 app.use(cors({
-    origin: 'https://www.skilledity.in/',  // Only allow requests from this origin
+    origin: 'https://www.skilledity.in',  // Only allow requests from this origin
 }));
 
 // TESTING API
@@ -27,4 +27,3 @@ app.use('/admin', admin_router);
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
-
