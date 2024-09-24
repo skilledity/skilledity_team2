@@ -26,9 +26,9 @@ app.get('/', (req, res) => {
 app.post('/school-login', loginSchool);  // School login
 app.post('/student-login', studentLogin); // Student login
 
-app.use('/school', authenticateToken, school_router);
-app.use('/student', authenticateToken, student_router);
-app.use('/admin', authenticateToken, admin_router);
+app.use('/school', school_router);
+app.use('/student', student_router);
+app.use('/admin', admin_router);
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
