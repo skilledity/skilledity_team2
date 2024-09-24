@@ -17,8 +17,13 @@ export const test = async (req, res) => {
     res.status(200).json({ message: 'Admin API is working' });
 }
 
+//genertae 8 digit random password
+const generatePassword = () => {
+    return Math.random().toString(36).slice(-8);
+}
+
 export const registerSchool = async (req, res) => {
-    const { name, email, password, address } = req.body;
+    const { name, email, address } = req.body;
     try {
         // Check if the school already exists
         const result = await pool.query('SELECT * FROM school WHERE email = $1', [email]);
@@ -27,6 +32,7 @@ export const registerSchool = async (req, res) => {
         }
 
         // Hash the password
+        const password = generatePassword();
         const hashedPassword = await bcryptjs.hash(password, 10);
 
         // Insert the new school into the database
