@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 export const authenticateToken = (req, res, next) => {
-    const token = req.cookies.auth_token; // Fetch the token from cookies
+    const token = req.cookies.jwt; // Fetch the token from cookies
 
     if (!token) {
         return res.status(401).json({ message: 'Session expired or not logged in' });

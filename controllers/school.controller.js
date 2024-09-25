@@ -11,6 +11,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
+import { authenticateToken } from "../middleware/auth.middleware.js";
 
 // Get directory name in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -72,11 +73,14 @@ export const getStudents = async (req, res) => {
 
 // Register a new student
 export const registerStudent = async (req, res) => {
-    const { student_id, student_school_fk, name, email, std_class, section, gender, father_name, dob, contact_no } = req.body;
+    const { student_id, name, email, std_class, section, gender, father_name, dob, contact_no } = req.body;
+    console.log(req.cookies);
+    console.log(req.user);
+    const school_id = req.user.schoolId;
 
     try {
         // Validate input
-        if (!email || !std_class || !name || !dob || !section || !student_school_fk || !student_id || !gender || !father_name || !contact_no) {
+        if (!email || !std_class || !name || !dob || !section || !student_id || !gender || !father_name || !contact_no) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
@@ -98,7 +102,7 @@ export const registerStudent = async (req, res) => {
         // Insert student data into the student table
         await pool.query(
             'INSERT INTO student (student_id, student_school_fk, name, email, lastlogin, no_of_logins, password, class, section, gender, fathers_name, dob, contact_no) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)',
-            [student_id, student_school_fk, name, email, today, 0, hashedPassword, std_class, section, gender, father_name, dob, contact_no]
+            [student_id, school_id, name, email, today, 0, hashedPassword, std_class, section, gender, father_name, dob, contact_no]
         );
 
         // Send the random password to the student via email
@@ -127,7 +131,7 @@ export const registerStudent = async (req, res) => {
 
 //login school
 export const loginSchool = async (req, res) => {
-    console.log(req.body);
+    // console.log(req.body);
     const { email, password } = req.body;
     const today = moment().format('YYYY-MM-DD');
 
@@ -147,14 +151,14 @@ export const loginSchool = async (req, res) => {
         }
 
         // Update login information
-        await pool.query(
-            'UPDATE school SET last_login = $1 WHERE email = $2',
-            [today, email]
-        );
+        // await pool.query(
+        //     'UPDATE school SET last_login = $1 WHERE email = $2',
+        //     [today, email]
+        // );
 
         // Create JWT token
         const tokenPayload = {
-            schoolId: school.id, // Include relevant information in the payload
+            schoolId: school.school_adm_no, // Include relevant information in the payload
             schoolName: school.name,
         };
 
@@ -395,59 +399,59 @@ const csvToJSON = async (csvfilepath) => {
 
 //upload csv file
 
-const registerStudentThroughCSV = async (req, res) => {
-    const { student_id, student_school_fk, name, email, std_class, section, gender, father_name, dob, contact_no } = req.body;
+// const registerStudentThroughCSV = async (req, res) => {
+//     const { student_id, student_school_fk, name, email, std_class, section, gender, father_name, dob, contact_no } = req.body;
 
-    try {
-        // Validate input
-        if (!email || !std_class || !name || !dob || !section || !student_school_fk || !student_id || !gender || !father_name || !contact_no) {
-            return res.status(400).json({ message: 'All fields are required' });
-        }
+//     try {
+//         // Validate input
+//         if (!email || !std_class || !name || !dob || !section || !student_school_fk || !student_id || !gender || !father_name || !contact_no) {
+//             return res.status(400).json({ message: 'All fields are required' });
+//         }
 
-        // Check if the student already exists
-        const checkStudent = await pool.query('SELECT * FROM student WHERE email = $1', [email]);
-        if (checkStudent.rows.length > 0) {
-            return res.status(400).json({ message: 'Student already registered with this email' });
-        }
+//         // Check if the student already exists
+//         const checkStudent = await pool.query('SELECT * FROM student WHERE email = $1', [email]);
+//         if (checkStudent.rows.length > 0) {
+//             return res.status(400).json({ message: 'Student already registered with this email' });
+//         }
 
-        // Generate a random password
-        const randomPassword = generatePassword();
+//         // Generate a random password
+//         const randomPassword = generatePassword();
 
-        // Hash the random password
-        const hashedPassword = await bcryptjs.hash(randomPassword, 10);
+//         // Hash the random password
+//         const hashedPassword = await bcryptjs.hash(randomPassword, 10);
 
-        // Get today's date for lastlogin
-        const today = new Date().toISOString().split('T')[0];
+//         // Get today's date for lastlogin
+//         const today = new Date().toISOString().split('T')[0];
 
-        // Insert student data into the student table
-        await pool.query(
-            'INSERT INTO student (student_id, student_school_fk, name, email, lastlogin, no_of_logins, password, class, section, gender, fathers_name, dob, contact_no) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)',
-            [student_id, student_school_fk, name, email, today, 0, hashedPassword, std_class, section, gender, father_name, dob, contact_no]
-        );
+//         // Insert student data into the student table
+//         await pool.query(
+//             'INSERT INTO student (student_id, student_school_fk, name, email, lastlogin, no_of_logins, password, class, section, gender, fathers_name, dob, contact_no) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)',
+//             [student_id, student_school_fk, name, email, today, 0, hashedPassword, std_class, section, gender, father_name, dob, contact_no]
+//         );
 
-        // Send the random password to the student via email
-        // const mailOptions = {
-        //     from: 'your-email@gmail.com',
-        //     to: email,
-        //     subject: 'Your Account Registration and Password',
-        //     text: `Hi ${name},\n\nYou have been successfully registered\nYour login details are as follows:\nEmail: ${email}\nPassword: ${randomPassword}\n\nPlease change your password upon first login.\n\nThanks!`
-        // };
+//         // Send the random password to the student via email
+//         // const mailOptions = {
+//         //     from: 'your-email@gmail.com',
+//         //     to: email,
+//         //     subject: 'Your Account Registration and Password',
+//         //     text: `Hi ${name},\n\nYou have been successfully registered\nYour login details are as follows:\nEmail: ${email}\nPassword: ${randomPassword}\n\nPlease change your password upon first login.\n\nThanks!`
+//         // };
 
-        // transporter.sendMail(mailOptions, (error, info) => {
-        //     if (error) {
-        //         console.error('Error sending email:', error);
-        //         return res.status(500).json({ message: 'Failed to send registration email' });
-        //     }
-        //     console.log('Registration email sent:', info.response);
-        // });
+//         // transporter.sendMail(mailOptions, (error, info) => {
+//         //     if (error) {
+//         //         console.error('Error sending email:', error);
+//         //         return res.status(500).json({ message: 'Failed to send registration email' });
+//         //     }
+//         //     console.log('Registration email sent:', info.response);
+//         // });
 
-        return res.status(201).json({ message: 'Student registered successfully, password sent via email', name: name, email: email, password: randomPassword });
+//         return res.status(201).json({ message: 'Student registered successfully, password sent via email', name: name, email: email, password: randomPassword });
 
-    } catch (error) {
-        console.error(`Error registering student - ${email}:`, error);
-        return res.status(500).json({ message: 'Internal Server Error' });
-    }
-}
+//     } catch (error) {
+//         console.error(`Error registering student - ${email}:`, error);
+//         return res.status(500).json({ message: 'Internal Server Error' });
+//     }
+// }
 
 const formatDate = (dob) => {
     const ddmmyyyyRegex = /^(\d{2})-(\d{2})-(\d{4})$/; // Matches dd-mm-yyyy
@@ -460,6 +464,9 @@ const formatDate = (dob) => {
 
 export const fileUpload = async (req, res) => {
     try {
+        if (!req.file.path) {
+            return res.status(400).json({message: "File not uploaded."});
+        }
         const jsonfile = await csvToJSON(req.file.path);
         await fs.promises.unlink(req.file.path);
         console.log("file deleted successfully.");
@@ -483,8 +490,8 @@ export const fileUpload = async (req, res) => {
 		console.log('\nNew Item');
 		console.log(item);
                 const response = await axios.post(process.env.REGISTER_STUDENT_API, item);
-		// data.push({"name": response.name, "email": response.email, "password": response.password});
-		console.log(response.data.message + ` - ${item.email}`);
+                // data.push({"name": response.name, "email": response.email, "password": response.password});
+                console.log(response.data.message + ` - ${item.email}`);
             }
 	    catch (error) {
                 console.log(`Error registering student: ${item.email}. Error: ${error}`);

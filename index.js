@@ -15,10 +15,10 @@ const app = express();
 const port = 3000;
 
 app.use(express.json());
-app.use(cors({
-    origin: 'https://www.skilledity.in',  // Only allow requests from this origin
-}));
 app.use(cookieParser());
+app.use(cors({
+    origin: process.env.FRONTEND_URL,  // Only allow requests from this origin
+}));
 
 // TESTING API
 app.get('/', (req, res) => {
@@ -28,9 +28,9 @@ app.get('/', (req, res) => {
 app.post('/school-login', loginSchool);  // School login
 app.post('/student-login', studentLogin); // Student login
 
-app.use('/school', authenticateToken, school_router);
+app.use('/school', school_router);
 app.use('/student', authenticateToken, student_router);
-app.use('/admin', authenticateToken, admin_router);
+app.use('/admin', admin_router);
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

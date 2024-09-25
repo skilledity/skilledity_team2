@@ -3,6 +3,8 @@ import multer from "multer";
 import path from 'path';
 import os from 'os';
 import fs from 'fs';
+import { authenticateToken } from "../middleware/auth.middleware.js";
+
 // import fileUpload from '../controllers/school.controller.js';
 import csv from 'csv-parser';
 import { changePassword, deleteStudent, fileUpload, forgotPassword, getSchool, getStudents, logoutSchool, registerStudent, loginSchool } from "../controllers/school.controller.js";
@@ -29,13 +31,13 @@ if (!fs.existsSync('uploads')) {
 
 router.get('/get-school', getSchool);
 router.get('/get-student/:id', getStudents);
-router.post('/school-login', loginSchool); //login route for school
+// router.post('/school-login', loginSchool); //login route for school
 router.post('/school-logout', logoutSchool)
-router.post('/register-student', registerStudent);
+router.post('/register-student', authenticateToken, registerStudent);
 router.put('/forget-password', forgotPassword);
-router.put('/change-password', changePassword);
+router.put('/change-password', authenticateToken, changePassword);
 router.post('/upload-csv', upload.single('file'), fileUpload);
 // router.post('/register-student-through-csv', registerStudentThroughCSV);
-router.delete('/delete-student', deleteStudent);
+router.delete('/delete-student', authenticateToken, deleteStudent);
 
 export default router;

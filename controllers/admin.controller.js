@@ -23,7 +23,7 @@ const generatePassword = () => {
 }
 
 export const registerSchool = async (req, res) => {
-    const { name, email, address } = req.body;
+    const { name, email, address, school_adm_no } = req.body;
     try {
         // Check if the school already exists
         const result = await pool.query('SELECT * FROM school WHERE email = $1', [email]);
@@ -36,7 +36,7 @@ export const registerSchool = async (req, res) => {
         const hashedPassword = await bcryptjs.hash(password, 10);
 
         // Insert the new school into the database
-        await pool.query('INSERT INTO school (name, email, password, address, email_sent, school_adm_no) VALUES ($1, $2, $3, $4, $5, $6)', [name, email, hashedPassword, address, false, "ADM901"]);
+        await pool.query('INSERT INTO school (name, email, password, address, email_sent, school_adm_no) VALUES ($1, $2, $3, $4, $5, $6)', [name, email, hashedPassword, address, false, school_adm_no]);
 
         // Send a welcome email to the school
         const mailOptions = {
