@@ -1,24 +1,18 @@
 import jwt from 'jsonwebtoken';
 
 export const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    
-    // Check if token is present and in the correct format (Bearer <token>)
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ message: 'Missing or malformed authorization header' });
-    }
+    const token = req.cookies.auth_token; // Fetch the token from cookies
 
-    const token = authHeader.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ message: 'Session expired or not logged in' });
+    }
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
-            if (err.name === 'TokenExpiredError') {
-                return res.status(403).json({ message: 'Token expired' });
-            }
-            return res.status(403).json({ message: 'Invalid token' });
+            return res.status(403).json({ message: 'Session expired or token invalid' });
         }
 
-        req.user = user;  // Attach the user payload to request object
+        req.user = user; // Attach user info to request
         next();
     });
 };
