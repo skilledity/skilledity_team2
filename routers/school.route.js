@@ -29,7 +29,7 @@ if (!fs.existsSync('uploads')) {
 
 router.get('/get-school', getSchool);
 router.get('/get-student/:id', getStudents);
-router.post('/school-login', loginSchool); //login route for student
+router.post('/school-login', loginSchool); //login route for school
 router.post('/school-logout', logoutSchool)
 router.post('/register-student', registerStudent);
 router.put('/forget-password', forgotPassword);
