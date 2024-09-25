@@ -10,6 +10,7 @@ import csv from 'csv-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import axios from 'axios';
+import jwt from 'jsonwebtoken';
 
 // Get directory name in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -151,11 +152,37 @@ export const loginSchool = async (req, res) => {
             [today, email]
         );
 
+        // Create JWT token
+        const tokenPayload = {
+            schoolId: school.id, // Include relevant information in the payload
+            schoolName: school.name,
+        };
+
+        const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: '15m' }); // Set token expiration time
+
+        // Set the token in a cookie
+        res.cookie('jwt', token, {
+            httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
+            secure: process.env.NODE_ENV === 'production', // Only set the cookie to be sent over HTTPS in production
+            maxAge: 15 * 60 * 1000 // Cookie expiration time (15 minutes)
+        });
+
         // Login successful
         return res.json({ message: 'Login successful!' });
 
     } catch (error) {
         console.error('Error during school login:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+//logout school
+export const logoutSchool = async (req, res) => {
+    try {
+        res.clearCookie('auth_token', { httpOnly: true, secure: true, sameSite: 'Strict' }); // Clear the authentication cookie with options
+        return res.status(200).json({ message: 'Logged out successfully' });
+    } catch (error) {
+        console.error('Error during school logout:', error); // log message for clarity
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 };
