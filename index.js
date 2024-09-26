@@ -17,7 +17,8 @@ const port = 3000;
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin: process.env.FRONTEND_URL,  // Only allow requests from this origin
+    origin: process.env.FRONTEND_URL, // Only allow requests from this origin
+    credentials: true
 }));
 
 // TESTING API

@@ -74,9 +74,24 @@ export const getStudents = async (req, res) => {
 // Register a new student
 export const registerStudent = async (req, res) => {
     const { student_id, name, email, std_class, section, gender, father_name, dob, contact_no } = req.body;
-    console.log(req.cookies);
-    console.log(req.user);
-    const school_id = req.user.schoolId;
+    let school_id;
+    if (req.headers.Cookie) { // "authorization" should be lowercase in headers
+        // console.log(req.headers.Cookie);
+        const token = req.headers.Cookie.jwt; // "authorization" not "Authorization"
+        // console.log("Register: " + token);
+        jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+            if (err) {
+                return res.status(403).json({ message: 'Session expired or token invalid' });
+            }
+            school_id = user.schoolId; // Assuming the school_id is part of the token payload
+            console.log(school_id); // Now this will log the correct value
+        });
+    }
+    else {
+        console.log(req.cookies);
+        console.log(req.user);
+        school_id = req.user.schoolId;
+    }
 
     try {
         // Validate input
@@ -399,60 +414,6 @@ const csvToJSON = async (csvfilepath) => {
 
 //upload csv file
 
-// const registerStudentThroughCSV = async (req, res) => {
-//     const { student_id, student_school_fk, name, email, std_class, section, gender, father_name, dob, contact_no } = req.body;
-
-//     try {
-//         // Validate input
-//         if (!email || !std_class || !name || !dob || !section || !student_school_fk || !student_id || !gender || !father_name || !contact_no) {
-//             return res.status(400).json({ message: 'All fields are required' });
-//         }
-
-//         // Check if the student already exists
-//         const checkStudent = await pool.query('SELECT * FROM student WHERE email = $1', [email]);
-//         if (checkStudent.rows.length > 0) {
-//             return res.status(400).json({ message: 'Student already registered with this email' });
-//         }
-
-//         // Generate a random password
-//         const randomPassword = generatePassword();
-
-//         // Hash the random password
-//         const hashedPassword = await bcryptjs.hash(randomPassword, 10);
-
-//         // Get today's date for lastlogin
-//         const today = new Date().toISOString().split('T')[0];
-
-//         // Insert student data into the student table
-//         await pool.query(
-//             'INSERT INTO student (student_id, student_school_fk, name, email, lastlogin, no_of_logins, password, class, section, gender, fathers_name, dob, contact_no) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)',
-//             [student_id, student_school_fk, name, email, today, 0, hashedPassword, std_class, section, gender, father_name, dob, contact_no]
-//         );
-
-//         // Send the random password to the student via email
-//         // const mailOptions = {
-//         //     from: 'your-email@gmail.com',
-//         //     to: email,
-//         //     subject: 'Your Account Registration and Password',
-//         //     text: `Hi ${name},\n\nYou have been successfully registered\nYour login details are as follows:\nEmail: ${email}\nPassword: ${randomPassword}\n\nPlease change your password upon first login.\n\nThanks!`
-//         // };
-
-//         // transporter.sendMail(mailOptions, (error, info) => {
-//         //     if (error) {
-//         //         console.error('Error sending email:', error);
-//         //         return res.status(500).json({ message: 'Failed to send registration email' });
-//         //     }
-//         //     console.log('Registration email sent:', info.response);
-//         // });
-
-//         return res.status(201).json({ message: 'Student registered successfully, password sent via email', name: name, email: email, password: randomPassword });
-
-//     } catch (error) {
-//         console.error(`Error registering student - ${email}:`, error);
-//         return res.status(500).json({ message: 'Internal Server Error' });
-//     }
-// }
-
 const formatDate = (dob) => {
     const ddmmyyyyRegex = /^(\d{2})-(\d{2})-(\d{4})$/; // Matches dd-mm-yyyy
     if (ddmmyyyyRegex.test(dob)) {
@@ -463,6 +424,8 @@ const formatDate = (dob) => {
 };
 
 export const fileUpload = async (req, res) => {
+    console.log(req.cookies.jwt);
+    console.log(req.user);
     try {
         if (!req.file.path) {
             return res.status(400).json({message: "File not uploaded."});
@@ -487,37 +450,25 @@ export const fileUpload = async (req, res) => {
 	// let data = [];
         for (const item of jsonData) {
             try {
-		console.log('\nNew Item');
-		console.log(item);
-                const response = await axios.post(process.env.REGISTER_STUDENT_API, item);
+                console.log('\nNew Item');
+                console.log(item);
+                const response = await axios.post(process.env.REGISTER_STUDENT_API, item,
+                    {
+                        headers: {
+                            // authorization: `Bearer ${req.cookies.jwt}`
+                            Cookie: `jwt=${req.cookies.jwt}`
+                        },
+                        withCredentials: true
+                    }
+                );
                 // data.push({"name": response.name, "email": response.email, "password": response.password});
                 console.log(response.data.message + ` - ${item.email}`);
             }
-	    catch (error) {
-                console.log(`Error registering student: ${item.email}. Error: ${error}`);
-            }
-	    await delay(1000);
+            catch (error) {
+                    console.log(`Error registering student: ${item.email}. Error: ${error}`);
+                }
+            await delay(1000);
         }
-
-	// for (const user of data) {
-            // Send the random password to the student via email
-           //  const mailOptions = {
-              //   from: 'your-email@gmail.com',
-               //  to: user.email,
-               // subject: 'Your Account Registration and Password',
-               // text: `Hi ${user.name},\n\nYou have been successfully registered\nYour login details are as follows:\nEmail: ${user.email}\nPassword: ${user.password}\n\nPlease change your password upon first login.\n\nThanks!`
-           // };
-
-           // transporter.sendMail(mailOptions, (error, info) => {
-             //   if (error) {
-               //     console.error('Error sending email:', error);
-                 //   return res.status(500).json({ message: 'Failed to send registration email' });
-               // }
-               // console.log('Registration email sent:', info.response);
-            // });
-
-	  //  await delay(1000);
-       // }
 
         res.status(200).json({ message: "CSV file parsed and data sent successfully.", data: jsonData });
     }

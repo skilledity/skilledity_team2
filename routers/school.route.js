@@ -36,7 +36,7 @@ router.post('/school-logout', logoutSchool)
 router.post('/register-student', authenticateToken, registerStudent);
 router.put('/forget-password', forgotPassword);
 router.put('/change-password', authenticateToken, changePassword);
-router.post('/upload-csv', upload.single('file'), fileUpload);
+router.post('/upload-csv', upload.single('file'), authenticateToken, fileUpload);
 // router.post('/register-student-through-csv', registerStudentThroughCSV);
 router.delete('/delete-student', authenticateToken, deleteStudent);
 
