@@ -88,8 +88,8 @@ export const registerStudent = async (req, res) => {
         });
     }
     else {
-        console.log(req.cookies);
-        console.log(req.user);
+       // console.log(req.cookies);
+       // console.log(req.user);
         school_id = req.user.schoolId;
     }
 
@@ -502,7 +502,7 @@ export const fileUpload = async (req, res) => {
     // console.log(req.cookies.jwt);
     // console.log(req.user);
     try {
-        if (!req.file.path) {
+        if (!req.file) {
             return res.status(400).json({ message: "File not uploaded." });
         }
         const jsonfile = await csvToJSON(req.file.path);
@@ -521,7 +521,7 @@ export const fileUpload = async (req, res) => {
 
         // Sending each object in jsonData to a different rouawait Promise.all(
 
-        // let data = [];
+        let not_registered = [];
         for (const item of jsonData) {
             try {
                 console.log('\nNew Item');
@@ -538,17 +538,18 @@ export const fileUpload = async (req, res) => {
                 // data.push({"name": response.name, "email": response.email, "password": response.password});
                 console.log(response.data.message + ` - ${item.email}`);
                 if (response.status !== 201) {
-                    not_registered.push({ student_id: item.student_id, name: item.name, email: item.email, error: response.message });
+                    not_registered.push({ student_id: item.student_id, name: item.name, email: item.email, error: response.data.message });
                 }
             }
             catch (error) {
-                console.log(`Error registering student: ${item.email}. Error: ${error}`);
+		not_registered.push({ student_id: item.student_id, name: item.name, email: item.email, error: error.response.data.message });
+                console.log(`Error registering student: ${item.email}. Error: ${error.response.data.message}`);
             }
             await delay(1000);
         }
 
         if (not_registered.length == 0) {
-            res.status(200).json({ message: "CSV file parsed and data sent successfully.", data: jsonData });
+            res.status(201).json({ message: "All students registered successfully.", data: jsonData });
         }
         else {
             res.status(400).json({ message: "Error registering some students.", students_not_registered: not_registered });
@@ -591,25 +592,9 @@ export const fetchStudents = async (req, res) => {
     if (!std_class || !section) {
         return res.status(400).json({ error: 'Class and section are required' });
     }
-
-    let school_id;
-    if (req.headers.Cookie) { // "authorization" should be lowercase in headers
-        // console.log(req.headers.Cookie);
-        const token = req.headers.Cookie.jwt; // "authorization
-        // console.log("Register: " + token);
-        jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-            if (err) {
-                return res.status(403).json({ message: 'Session expired or token invalid' });
-            }
-            school_id = user.schoolId; // Assuming the school_id is part of the token payload
-            console.log(school_id); // Now this will log the correct value
-        });
-    }
-    else {
-        console.log(req.cookies);
-        console.log(req.user);
-        school_id = req.user.schoolId;
-    }
+    console.log("User: " + JSON.stringify(req.user));
+    const school_id = req.user.schoolId;
+    //}
 
     try {
         const result = await pool.query(
