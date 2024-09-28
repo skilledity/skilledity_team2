@@ -510,7 +510,6 @@ export const fileUpload = async (req, res) => {
         console.log("file deleted successfully.");
 
         // Helper function to introduce delay
-        // Helper function to introduce delay
         const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
         const jsonData = removeDuplicatesByEmail(jsonfile).map(item => {
@@ -523,8 +522,6 @@ export const fileUpload = async (req, res) => {
         // Sending each object in jsonData to a different rouawait Promise.all(
 
         // let data = [];
-
-        let not_registered = [];
         for (const item of jsonData) {
             try {
                 console.log('\nNew Item');
@@ -547,25 +544,22 @@ export const fileUpload = async (req, res) => {
             catch (error) {
                 console.log(`Error registering student: ${item.email}. Error: ${error}`);
             }
-            res.status(500).json({ message: "Internal server error" });
-            console.log(`Error registering student: ${item.email}. Error: ${error.message}`);
+            await delay(1000);
         }
-        await delay(1000);
-    }
 
         if (not_registered.length == 0) {
-        res.status(200).json({ message: "CSV file parsed and data sent successfully.", data: jsonData });
+            res.status(200).json({ message: "CSV file parsed and data sent successfully.", data: jsonData });
+        }
+        else {
+            res.status(400).json({ message: "Error registering some students.", students_not_registered: not_registered });
+        }
     }
-    else {
-        res.status(400).json({ message: "Error registering some students.", students_not_registered: not_registered });
-    }
-}
     catch (error) {
-    console.log(error);
-    await fs.promises.unlink(req.file.path);
-    console.log("file deleted successfully.");
-    res.status(500).json({ message: "Internal server error." });
-}
+        console.log(error);
+        await fs.promises.unlink(req.file.path);
+        console.log("file deleted successfully.");
+        res.status(500).json({ message: "Internal server error." });
+    }
 };
 
 //delete student from database
