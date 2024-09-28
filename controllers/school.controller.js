@@ -428,13 +428,13 @@ export const fileUpload = async (req, res) => {
     console.log(req.user);
     try {
         if (!req.file.path) {
-            return res.status(400).json({message: "File not uploaded."});
+            return res.status(400).json({ message: "File not uploaded." });
         }
         const jsonfile = await csvToJSON(req.file.path);
         await fs.promises.unlink(req.file.path);
         console.log("file deleted successfully.");
 
-	// Helper function to introduce delay
+        // Helper function to introduce delay
         const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
         const jsonData = removeDuplicatesByEmail(jsonfile).map(item => {
@@ -446,8 +446,8 @@ export const fileUpload = async (req, res) => {
         // console.log(jsonData);
 
         // Sending each object in jsonData to a different rouawait Promise.all(
-	
-	// let data = [];
+
+        // let data = [];
         for (const item of jsonData) {
             try {
                 console.log('\nNew Item');
@@ -465,8 +465,8 @@ export const fileUpload = async (req, res) => {
                 console.log(response.data.message + ` - ${item.email}`);
             }
             catch (error) {
-                    console.log(`Error registering student: ${item.email}. Error: ${error}`);
-                }
+                console.log(`Error registering student: ${item.email}. Error: ${error}`);
+            }
             await delay(1000);
         }
 
@@ -479,7 +479,6 @@ export const fileUpload = async (req, res) => {
         res.status(500).json({ message: "Internal server error." });
     }
 };
-
 
 //delete student from database
 export const deleteStudent = async (req, res) => {
@@ -503,5 +502,46 @@ export const deleteStudent = async (req, res) => {
     }
 }
 
+//fetch students from database (post request containing class and section) of school_adm_no from jwt token
+export const fetchStudents = async (req, res) => {
+    const { std_class, section } = req.body;
+
+    if (!std_class || !section
+        || typeof std_class !== 'number'
+        || typeof section !== 'string') {
+        return res.status(400).json({ error: 'Class and section are required' });
+    }
+
+    let school_id;
+    if (req.headers.Cookie) { // "authorization" should be lowercase in headers
+        // console.log(req.headers.Cookie);
+        const token = req.headers.Cookie.jwt; // "authorization
+        // console.log("Register: " + token);
+        jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+            if (err) {
+                return res.status(403).json({ message: 'Session expired or token invalid' });
+            }
+            school_id = user.schoolId; // Assuming the school_id is part of the token payload
+            console.log(school_id); // Now this will log the correct value
+        });
+    }
+    else {
+        console.log(req.cookies);
+        console.log(req.user);
+        school_id = req.user.schoolId;
+    }
+
+    try {
+        const result = await pool.query(
+            'SELECT * FROM student WHERE student_school_fk = $1 AND class = $2 AND section = $3',
+            [school_id, std_class, section]
+        );
+
+        return res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching students:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
 
 
