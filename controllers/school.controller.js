@@ -499,8 +499,8 @@ const formatDate = (dob) => {
 };
 
 export const fileUpload = async (req, res) => {
-    console.log(req.cookies.jwt);
-    console.log(req.user);
+    // console.log(req.cookies.jwt);
+    // console.log(req.user);
     try {
         if (!req.file.path) {
             return res.status(400).json({message: "File not uploaded."});
@@ -509,7 +509,7 @@ export const fileUpload = async (req, res) => {
         await fs.promises.unlink(req.file.path);
         console.log("file deleted successfully.");
 
-	// Helper function to introduce delay
+	    // Helper function to introduce delay
         const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
         const jsonData = removeDuplicatesByEmail(jsonfile).map(item => {
@@ -518,16 +518,15 @@ export const fileUpload = async (req, res) => {
             }
             return item;
         });
-        // console.log(jsonData);
 
         // Sending each object in jsonData to a different rouawait Promise.all(
 	
-	// let data = [];
+	    let not_registered = [];
         for (const item of jsonData) {
             try {
                 console.log('\nNew Item');
                 console.log(item);
-                const response = await axios.post(process.env.REGISTER_STUDENT_API, item,
+                const response = await axios.post(process.env.REGISTER_STUDENT_API_DEV, item,
                     {
                         headers: {
                             // authorization: `Bearer ${req.cookies.jwt}`
@@ -538,14 +537,23 @@ export const fileUpload = async (req, res) => {
                 );
                 // data.push({"name": response.name, "email": response.email, "password": response.password});
                 console.log(response.data.message + ` - ${item.email}`);
+                if (response.status!==201) {
+                    not_registered.push({student_id: item.student_id, name: item.name, email: item.email, error: response.message});
+                }
             }
             catch (error) {
-                    console.log(`Error registering student: ${item.email}. Error: ${error}`);
-                }
+                res.status(500).json({message: "Internal server error"});
+                console.log(`Error registering student: ${item.email}. Error: ${error.message}`);
+            }
             await delay(1000);
         }
 
-        res.status(200).json({ message: "CSV file parsed and data sent successfully.", data: jsonData });
+        if (not_registered.length==0) {
+            res.status(200).json({ message: "CSV file parsed and data sent successfully.", data: jsonData });
+        }
+        else {
+            res.status(400).json({message: "Error registering some students.", students_not_registered: not_registered});
+        }
     }
     catch (error) {
         console.log(error);
