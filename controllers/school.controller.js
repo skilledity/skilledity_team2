@@ -588,9 +588,7 @@ export const deleteStudent = async (req, res) => {
 export const fetchStudents = async (req, res) => {
     const { std_class, section } = req.body;
 
-    if (!std_class || !section
-        || typeof std_class !== 'number'
-        || typeof section !== 'string') {
+    if (!std_class || !section) {
         return res.status(400).json({ error: 'Class and section are required' });
     }
 
