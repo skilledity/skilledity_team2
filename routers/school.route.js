@@ -7,7 +7,7 @@ import { authenticateToken } from "../middleware/auth.middleware.js";
 
 // import fileUpload from '../controllers/school.controller.js';
 import csv from 'csv-parser';
-import { changePassword, deleteStudent, fileUpload, forgotPassword, getSchool, getStudents, logoutSchool, registerStudent, loginSchool } from "../controllers/school.controller.js";
+import { changePassword, deleteStudent, fileUpload, forgotPassword, getSchool, getStudents, logoutSchool, registerStudent, loginSchool, fetchStudents } from "../controllers/school.controller.js";
 
 const router = express.Router();
 
@@ -39,5 +39,6 @@ router.put('/change-password', authenticateToken, changePassword);
 router.post('/upload-csv', upload.single('file'), authenticateToken, fileUpload);
 // router.post('/register-student-through-csv', registerStudentThroughCSV);
 router.delete('/delete-student', authenticateToken, deleteStudent);
+router.post('/get-student', fetchStudents);
 
 export default router;

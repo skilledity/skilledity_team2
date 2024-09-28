@@ -526,7 +526,7 @@ export const fileUpload = async (req, res) => {
             try {
                 console.log('\nNew Item');
                 console.log(item);
-                const response = await axios.post(process.env.REGISTER_STUDENT_API_DEV, item,
+                const response = await axios.post(process.env.REGISTER_STUDENT_API, item,
                     {
                         headers: {
                             // authorization: `Bearer ${req.cookies.jwt}`
