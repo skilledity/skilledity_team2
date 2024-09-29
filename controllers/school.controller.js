@@ -598,9 +598,13 @@ export const fetchStudents = async (req, res) => {
 
     try {
         const result = await pool.query(
-            'SELECT * FROM student WHERE student_school_fk = $1 AND class = $2 AND section = $3',
+            'SELECT student_id, name, email, class, section, gender, fathers_name, dob, contact_no FROM student WHERE student_school_fk = $1 AND class = $2 AND section = $3',
             [school_id, std_class, section]
         );
+
+	for (let student of result.rows) {
+	    student.dob = student.dob.toISOString().split('T')[0];
+    	}
 
         return res.json(result.rows);
     } catch (error) {
